@@ -1,6 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 
 use chrono::{DateTime, Duration, Local};
+
+use reqwest::get;
 use rust_bert::pipelines::summarization::SummarizationModel;
 use serenity::{
 	async_trait,
@@ -97,8 +99,9 @@ impl EventHandler for Bot {
 				.await
 				.insert(msg.author.id, Local::now());
 			// Process command.
-			if let Some(command) = words.next() {
-				match command {
+			let command = words.next();
+			if command.is_some() {
+				match command.unwrap() {
 					"hello" => {
 						safe_say(ctx.http, &msg, "Hello!").await;
 					}
@@ -123,6 +126,78 @@ impl EventHandler for Bot {
 							.await
 							.unwrap();
 						safe_say(ctx.http, &msg, &output).await;
+					}
+					"minify-web" => {
+						let msg = msg.clone();
+						let working = safe_say(ctx.http.clone(), &msg, "Working...")
+							.await
+							.unwrap();
+						let next =
+							(*words.next().unwrap_or("https://example.com").clone()).to_string();
+						let content = get(next).await.unwrap().text().await.unwrap();
+						let text = html2text::from_read(content.as_bytes(), 200)
+							.lines()
+							.filter(|v| v.len() > 1)
+							.map(|v| v.trim())
+							.map(|v| {
+								v.chars()
+									.filter(|v| {
+										v.is_alphabetic()
+											|| v.is_ascii_punctuation() || v.is_whitespace()
+									})
+									.collect::<String>()
+							})
+							.collect::<Vec<String>>()
+							.join(" ");
+						if text.len() > 0 {
+							let output = task::spawn_blocking(move || {
+								let model = SummarizationModel::new(Default::default()).unwrap();
+								let inputs = [text.as_str()];
+								model.summarize(inputs)[0].clone()
+							})
+							.await
+							.unwrap();
+							msg.channel_id
+								.delete_message(ctx.http.clone(), working.id)
+								.await
+								.unwrap();
+							safe_say(ctx.http, &msg, &output).await;
+						} else {
+							safe_say(ctx.http, &msg, "Empty document?").await;
+						}
+					}
+					"textify" => {
+						let msg = msg.clone();
+						let working = safe_say(ctx.http.clone(), &msg, "Working...")
+							.await
+							.unwrap();
+						let next =
+							(*words.next().unwrap_or("https://example.com").clone()).to_string();
+						let content = get(next).await.unwrap().text().await.unwrap();
+						let text = html2text::from_read(content.as_bytes(), 200)
+							.lines()
+							.filter(|v| v.len() > 1)
+							.map(|v| v.trim())
+							.map(|v| {
+								v.chars()
+									.filter(|v| {
+										v.is_alphabetic()
+											|| v.is_ascii_punctuation() || v.is_whitespace()
+									})
+									.collect::<String>()
+							})
+							.collect::<Vec<String>>()
+							.join(" ");
+						msg.channel_id
+							.delete_message(ctx.http.clone(), working.id)
+							.await
+							.unwrap();
+						if text.len() > 0 {
+							safe_say(ctx.http, &msg, &text.chars().take(2000).collect::<String>())
+								.await;
+						} else {
+							safe_say(ctx.http, &msg, "Empty document?").await;
+						}
 					}
 					_ => {
 						safe_say(ctx.http, &msg, "I don't know that command, sorry.").await;
