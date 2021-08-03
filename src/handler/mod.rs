@@ -3,7 +3,9 @@ use std::{collections::HashMap, sync::Arc};
 use chrono::{DateTime, Duration, Local};
 
 use reqwest::get;
-use rust_bert::pipelines::summarization::SummarizationModel;
+use rust_bert::pipelines::{
+	summarization::SummarizationModel, text_generation::TextGenerationModel,
+};
 use serenity::{
 	async_trait,
 	client::EventHandler,
@@ -204,6 +206,25 @@ impl EventHandler for Bot {
 						} else {
 							safe_say(ctx.http, &msg, "Empty document?").await;
 						}
+					}
+					"complete" => {
+						let msg = msg.clone();
+						let working = safe_say(ctx.http.clone(), &msg, "Working...")
+							.await
+							.unwrap();
+						let next = words.collect::<Vec<&str>>().join(" ");
+						let output = task::spawn_blocking(move || {
+							let model = TextGenerationModel::new(Default::default()).unwrap();
+							let inputs = [next.as_str()];
+							model.generate(inputs, None).join("\n")
+						})
+						.await
+						.unwrap();
+						msg.channel_id
+							.delete_message(ctx.http.clone(), working.id)
+							.await
+							.unwrap();
+						safe_say(ctx.http, &msg, &output).await;
 					}
 					_ => {
 						safe_say(ctx.http, &msg, "I don't know that command, sorry.").await;
