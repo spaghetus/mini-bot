@@ -411,18 +411,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "discord-minify"
-version = "0.1.0"
-dependencies = [
- "clap",
- "html2text",
- "reqwest",
- "rust-bert",
- "serenity",
- "tokio",
-]
-
-[[package]]
 name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -973,6 +961,18 @@ checksum = "2684d4c2e97d99848d30b324b00c8fcc7e5c897b7cbb5819b09e7c90e8baf212"
 dependencies = [
  "mime",
  "unicase",
+]
+
+[[package]]
+name = "mini-bot"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "html2text",
+ "reqwest",
+ "rust-bert",
+ "serenity",
+ "tokio",
 ]
 
 [[package]]
