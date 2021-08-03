@@ -134,7 +134,10 @@ impl EventHandler for Bot {
 							.unwrap();
 						let next =
 							(*words.next().unwrap_or("https://example.com").clone()).to_string();
-						let content = get(next).await.unwrap().text().await.unwrap();
+						let mut content = get(next).await.unwrap().text().await.unwrap();
+						if let Some(index) = content.find("</nav>") {
+							content = content[index..].to_string();
+						}
 						let text = html2text::from_read(content.as_bytes(), 200)
 							.lines()
 							.filter(|v| v.len() > 1)
@@ -173,7 +176,10 @@ impl EventHandler for Bot {
 							.unwrap();
 						let next =
 							(*words.next().unwrap_or("https://example.com").clone()).to_string();
-						let content = get(next).await.unwrap().text().await.unwrap();
+						let mut content = get(next).await.unwrap().text().await.unwrap();
+						if let Some(index) = content.find("</nav>") {
+							content = content[index..].to_string();
+						}
 						let text = html2text::from_read(content.as_bytes(), 200)
 							.lines()
 							.filter(|v| v.len() > 1)
