@@ -1,0 +1,7 @@
+name: Mini
+args:
+  - token:
+      required: true
+      takes_value: true
+  - shards:
+      takes_value: true
