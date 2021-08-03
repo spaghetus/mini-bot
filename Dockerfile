@@ -12,5 +12,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y libssl-dev ca-certificates curl && rm -rf /var/lib/apt/lists
 RUN update-ca-certificates
 COPY --from=builder /app/target/release/mini-bot ./
+COPY --from=builder /app/target/release/build/torch-sys* ./target/release/build/
 ENV RUSTBERT_CACHE=/cache
-CMD ["./mini-bot"]
+RUN mv $(find target -name *.so*) /usr/lib/
+RUN cp /usr/lib/libgomp-*.so.1 /usr/lib/libgomp.so.1
+CMD "./mini-bot"

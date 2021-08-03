@@ -1,6 +1,6 @@
 [package]
 name = "mini-bot"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -12,3 +12,4 @@ reqwest = "*"
 rust-bert = "*"
 tokio = {version="*", features=["macros","rt-multi-thread"]}
 clap = {version = "*", features = ["yaml"]}
+chrono = "*"

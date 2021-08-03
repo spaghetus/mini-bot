@@ -8,7 +8,7 @@ mod handler;
 async fn main() {
 	let args = args::Args::get();
 	let mut client = Client::builder(args.bot_token)
-		.event_handler(Bot)
+		.event_handler(Bot::new())
 		.await
 		.expect("Failed to init client");
 
