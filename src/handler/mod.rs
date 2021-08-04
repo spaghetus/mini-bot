@@ -232,7 +232,7 @@ impl EventHandler for Bot {
 							let mut config: TextGenerationConfig = Default::default();
 							config.min_length = 50;
 							config.max_length = 100;
-							config.temperature = 3.0;
+							config.temperature = 1.0;
 							let model = TextGenerationModel::new(config).unwrap();
 							let inputs = [next.as_str()];
 							model.generate(inputs, None).join("\n")
