@@ -4,7 +4,8 @@ use chrono::{DateTime, Duration, Local};
 
 use reqwest::get;
 use rust_bert::pipelines::{
-	summarization::SummarizationModel, text_generation::TextGenerationModel,
+	summarization::SummarizationModel,
+	text_generation::{TextGenerationConfig, TextGenerationModel},
 };
 use serenity::{
 	async_trait,
@@ -40,8 +41,22 @@ impl EventHandler for Bot {
 		msg: serenity::model::channel::Message,
 	) {
 		msg.channel_id.start_typing(&ctx.http).unwrap();
-		let mut words = msg.content.split(' ');
-		if words.next() == Some("!mini") {
+		let mentions_me = msg.mentions_me(&ctx.http).await.unwrap();
+		let text = msg.content.clone();
+		let mut words = text.split(' ').into_iter();
+		let at_me = {
+			if msg.author.bot {
+				false
+			} else if mentions_me {
+				words.next();
+				true
+			} else if words.next() == Some("!mini") {
+				true
+			} else {
+				false
+			}
+		};
+		if at_me {
 			// Check rate-limiting.
 			let (limited_by_user, limited_by_guild) = {
 				if msg.author.id.as_u64() == &254656673484898314u64 {
@@ -61,7 +76,7 @@ impl EventHandler for Bot {
 						.await
 						.get(&msg.author.id)
 						.cloned();
-					let latest_allowed_for_user = now - Duration::seconds(10);
+					let latest_allowed_for_user = now - Duration::seconds(5);
 					let latest_allowed_for_guild = now - Duration::seconds(2);
 					let limited_by_user = last_used_by_user
 						.map(|v| v > latest_allowed_for_user)
@@ -102,8 +117,8 @@ impl EventHandler for Bot {
 				.insert(msg.author.id, Local::now());
 			// Process command.
 			let command = words.next();
-			if command.is_some() {
-				match command.unwrap() {
+			if command.is_some() || mentions_me {
+				match command.unwrap_or("") {
 					"hello" => {
 						safe_say(ctx.http, &msg, "Hello!").await;
 					}
@@ -230,12 +245,33 @@ impl EventHandler for Bot {
 							.unwrap();
 						safe_say(ctx.http, &msg, &output).await;
 					}
+					"help" => {
+						safe_say(
+							ctx.http,
+							&msg,
+							match words.next() {
+								Some("hello") => "Says hello.",
+								Some("shard") => "Lets you know which Mini shard you're talking to.",
+								Some("minify") => "Tries to compress the text after it. It sometimes doesn't work great...", 
+								Some("minify-web") => "Tries to compress the text in the URL after it. It sometimes doesn't work great...", 
+								Some("textify") => "Returns the first 2000 characters (Discord length limit) of text in the URL after it.",
+								Some("complete") => "Generates more text from the seed after it.",
+								Some("help") => "Outputs help text, with an optional topic.",
+								Some(_) => "I don't know that help topic, sorry.",
+								_ => "Available commands are hello, shard, minify, minify-web, textify, complete, help. You can pass a command's name to help to learn what it does.",
+							},
+						)
+						.await;
+					}
 					_ => {
-						safe_say(ctx.http, &msg, "I don't know that command, sorry.").await;
+						safe_say(
+							ctx.http,
+							&msg,
+							"To learn how to use Mini, type '!mini help'",
+						)
+						.await;
 					}
 				}
-			} else {
-				safe_say(ctx.http, &msg, "Please specify a command.").await;
 			}
 		}
 		()
