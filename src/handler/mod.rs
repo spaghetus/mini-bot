@@ -214,7 +214,11 @@ impl EventHandler for Bot {
 							.unwrap();
 						let next = words.collect::<Vec<&str>>().join(" ");
 						let output = task::spawn_blocking(move || {
-							let model = TextGenerationModel::new(Default::default()).unwrap();
+							let mut config: TextGenerationConfig = Default::default();
+							config.min_length = 50;
+							config.max_length = 100;
+							config.temperature = 3.0;
+							let model = TextGenerationModel::new(config).unwrap();
 							let inputs = [next.as_str()];
 							model.generate(inputs, None).join("\n")
 						})
