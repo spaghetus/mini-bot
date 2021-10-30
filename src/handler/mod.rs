@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, env, sync::Arc};
 
 use chrono::{DateTime, Duration, Local};
 
@@ -230,9 +230,18 @@ impl EventHandler for Bot {
 						let next = words.collect::<Vec<&str>>().join(" ");
 						let output = task::spawn_blocking(move || {
 							let mut config: TextGenerationConfig = Default::default();
-							config.min_length = 50;
-							config.max_length = 100;
-							config.temperature = 1.0;
+							config.min_length = env::var("MIN_LENGTH")
+								.ok()
+								.and_then(|v| v.parse::<i64>().ok())
+								.unwrap_or(50);
+							config.max_length = env::var("MAX_LENGTH")
+								.ok()
+								.and_then(|v| v.parse::<i64>().ok())
+								.unwrap_or(100);
+							config.temperature = env::var("TEMPERATURE")
+								.ok()
+								.and_then(|v| v.parse::<f64>().ok())
+								.unwrap_or(4.0);
 							let model = TextGenerationModel::new(config).unwrap();
 							let inputs = [next.as_str()];
 							model.generate(inputs, None).join("\n")
