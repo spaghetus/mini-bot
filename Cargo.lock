@@ -965,13 +965,14 @@ dependencies = [
 
 [[package]]
 name = "mini-bot"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "chrono",
  "clap",
  "html2text",
  "reqwest",
  "rust-bert",
+ "serde_json",
  "serenity",
  "tokio",
 ]

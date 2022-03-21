@@ -19,6 +19,8 @@ use serenity::{
 };
 use tokio::task;
 
+use crate::BAD_WORDS;
+
 pub struct Bot {
 	last_used_by_guild: Arc<RwLock<HashMap<GuildId, DateTime<Local>>>>,
 	last_used_by_user: Arc<RwLock<HashMap<UserId, DateTime<Local>>>>,
@@ -288,6 +290,17 @@ impl EventHandler for Bot {
 }
 
 async fn safe_say(http: Arc<Http>, msg: &Message, text: &str) -> Option<Message> {
+	let text = text
+		.split_whitespace()
+		.map(|v| {
+			if BAD_WORDS.contains(&v) {
+				"[REDACTED]"
+			} else {
+				v
+			}
+		})
+		.collect::<Vec<&str>>()
+		.join(" ");
 	let result = msg.channel_id.say(http, text).await;
 	match result {
 		Ok(v) => Some(v),

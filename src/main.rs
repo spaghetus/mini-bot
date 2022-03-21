@@ -4,6 +4,8 @@ use serenity::Client;
 mod args;
 mod handler;
 
+pub(crate) const BAD_WORDS: &[&str] = &include!("bad-words.json");
+
 #[tokio::main]
 async fn main() {
 	let args = args::Args::get();
