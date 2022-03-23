@@ -124,6 +124,9 @@ impl EventHandler for Bot {
 					"hello" => {
 						safe_say(ctx.http, &msg, "Hello!").await;
 					}
+					"echo" => {
+						safe_say(ctx.http, &msg, &words.collect::<Vec<&str>>().join(" ")).await;
+					}
 					"shard" => {
 						safe_say(ctx.http, &msg, &ctx.shard_id.to_string()).await;
 					}
@@ -290,13 +293,17 @@ impl EventHandler for Bot {
 }
 
 async fn safe_say(http: Arc<Http>, msg: &Message, text: &str) -> Option<Message> {
-	let text = {
-		let mut text = text.to_string();
-		for word in BAD_WORDS {
-			text = text.replace(word, "[REDACTED]");
-		}
-		text
-	};
+	let text = text
+		.split(' ')
+		.map(|w| {
+			if BAD_WORDS.contains(&w.to_lowercase().as_str()) {
+				"[REDACTED]"
+			} else {
+				w
+			}
+		})
+		.collect::<Vec<&str>>()
+		.join(" ");
 	let result = msg.channel_id.say(http, text).await;
 	match result {
 		Ok(v) => Some(v),

@@ -8,12 +8,12 @@ fn main() {
 		.unwrap()
 		.lines()
 		.skip(1)
-		.flat_map(|l| l.split(',').next().map(|v| v.to_string()))
+		.flat_map(|l| l.split(',').next().map(|v| v.to_lowercase().to_string()))
 		.chain(
 			std::fs::read_to_string("more-bad-words.list")
 				.unwrap()
 				.lines()
-				.map(|v| v.to_string()),
+				.map(|v| v.to_lowercase().to_string()),
 		)
 		.collect::<Vec<String>>();
 	let bad_words_json = serde_json::to_string(&bad_words_csv).unwrap();
